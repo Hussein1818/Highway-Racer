@@ -9,59 +9,55 @@
 using namespace std;
 
 // --- Structs ---
-struct Obstacle {             // هيكل يمثل العقبة
-    float x, y;               // الإحداثيات
-    float width, height;      // الأبعاد
-    bool active;              // حالة النشاط
+struct Obstacle {
+    float x, y;
+    float width, height;
+    bool active;
 };
 
 // --- Global Variables ---
-float carY = 0.0f;            // موقع السيارة الرأسي
-float carSpeed = 0.04f;       // سرعة حركة السيارة
-float roadSpeed = 0.02f;      // سرعة الطريق
-float roadOffset = 0.0f;      // إزاحة خطوط الطريق
-int score = 0;                // النتيجة الحالية
-int highScore = 0;            // أعلى نتيجة
-bool gameOver = false;        // حالة نهاية اللعبة
-bool isPaused = false;        // حالة التوقف المؤقت
-bool gameStarted = false;     // هل بدأت اللعبة أم لا
-
-// --- Countdown Variables ---
-bool inCountdown = false;     // هل نحن في وضع العد التنازلي؟
-int countdownValue = 3;       // قيمة العد التنازلي
-
-// حالة الأزرار للحركة الناعمة
+float carY = 0.0f;
+float carSpeed = 0.04f;
+float roadSpeed = 0.02f;
+float roadOffset = 0.0f;
+int score = 0;
+int highScore = 0;
+bool gameOver = false;
+bool isPaused = false;
+bool gameStarted = false;
+bool inCountdown = false;
+int countdownValue = 3;
 bool keyUp = false;
 bool keyDown = false;
 
-vector<Obstacle> obstacles;   // قائمة العقبات
+vector<Obstacle> obstacles;
 
 // --- 1: Game Setup ---
 void initGame() {
-    glClearColor(0.15f, 0.15f, 0.15f, 1.0f); // لون الخلفية (أسفلت غامق)
+    glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-// دالة المؤقت للعد التنازلي
+// --- Countdown Timer Function ---
 void countdownTimer(int value) {
     if (countdownValue > 1) {
         countdownValue--;
         glutTimerFunc(1000, countdownTimer, 0);
     }
     else {
-        inCountdown = false; // انتهاء العد التنازلي وبدء اللعب
+        inCountdown = false;
     }
     glutPostRedisplay();
 }
 
 // --- 2: Draw the Road ---
 void drawRoad() {
-    glColor3f(0.0f, 0.6f, 0.0f); // العشب الأخضر
+    glColor3f(0.0f, 0.6f, 0.0f);
     glRectf(-1.0f, 0.8f, 1.0f, 1.0f);
     glRectf(-1.0f, -1.0f, 1.0f, -0.8f);
 
-    glColor3f(1.0f, 1.0f, 1.0f); // خطوط الطريق البيضاء
+    glColor3f(1.0f, 1.0f, 1.0f);
     glLineWidth(4.0f);
     glBegin(GL_LINES);
     for (float i = -1.0f; i < 1.0f; i += 0.4f) {
@@ -78,30 +74,28 @@ void drawCar() {
     float x = -0.7f;
     float y = carY;
 
-    glColor3f(1.0f, 0.0f, 0.0f); // جسم السيارة أحمر زاهي
+    glColor3f(1.0f, 0.0f, 0.0f);
     glRectf(x - 0.1f, y - 0.05f, x + 0.1f, y + 0.05f);
     glColor3f(0.8f, 0.0f, 0.0f);
     glRectf(x - 0.05f, y + 0.05f, x + 0.05f, y + 0.1f);
-    glColor3f(0.0f, 0.0f, 0.0f); // الإطارات
+    glColor3f(0.0f, 0.0f, 0.0f);
     glRectf(x - 0.08f, y - 0.08f, x - 0.04f, y - 0.05f);
     glRectf(x + 0.04f, y - 0.08f, x + 0.08f, y - 0.05f);
-    glColor3f(0.5f, 0.9f, 1.0f); // الزجاج
+    glColor3f(0.5f, 0.9f, 1.0f);
     glRectf(x + 0.01f, y + 0.06f, x + 0.04f, y + 0.09f);
-    glColor3f(1.0f, 1.0f, 0.0f); // الأنوار
+    glColor3f(1.0f, 1.0f, 0.0f);
     glRectf(x + 0.1f, y, x + 0.11f, y + 0.03f);
 }
 
-// --- 4: Draw Obstacles (Modified with X shape) ---
+// --- 4: Draw Obstacles ---
 void drawObstacles() {
     for (const auto& obs : obstacles) {
         if (!obs.active) continue;
 
-        // رسم المربع البني
         glColor3f(0.6f, 0.4f, 0.2f);
         glRectf(obs.x, obs.y, obs.x + obs.width, obs.y + obs.height);
 
-        // رسم حرف X داخل المربع كما في الصورة المطلوبة
-        glColor3f(0.4f, 0.2f, 0.1f); // بني غامق للـ X
+        glColor3f(0.4f, 0.2f, 0.1f);
         glLineWidth(3.0f);
         glBegin(GL_LINES);
         glVertex2f(obs.x, obs.y);
@@ -110,7 +104,6 @@ void drawObstacles() {
         glVertex2f(obs.x + obs.width, obs.y);
         glEnd();
 
-        // إطار خارجي رفيع لزيادة الوضوح
         glColor3f(0.3f, 0.15f, 0.05f);
         glBegin(GL_LINE_LOOP);
         glVertex2f(obs.x, obs.y);
@@ -168,7 +161,6 @@ void renderScene() {
     glLoadIdentity();
 
     if (!gameStarted) {
-        // شاشة البداية (بنفس التنسيق الزاهي)
         glColor3f(1.0f, 1.0f, 0.0f);
         glRasterPos2f(-0.35f, 0.65f);
         string title = "HIGHWAY RACER PRO";
@@ -220,7 +212,6 @@ void renderScene() {
     drawObstacles();
     drawCar();
 
-    // عرض النتيجة
     glColor3f(1.0f, 1.0f, 1.0f);
     glRasterPos2f(-0.95f, 0.88f);
     string txt = gameOver ? "CRASHED! Score: " + to_string(score) + " - Press 'R' to Restart" :
@@ -228,9 +219,8 @@ void renderScene() {
 
     for (char c : txt) glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
 
-    // عرض المؤقت التنازلي
     if (inCountdown) {
-        glColor3f(1.0f, 1.0f, 0.0f); // أصفر زاهي
+        glColor3f(1.0f, 1.0f, 0.0f);
         glRasterPos2f(-0.05f, 0.0f);
         string cMsg = to_string(countdownValue);
         for (char c : cMsg) glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, c);
@@ -246,7 +236,7 @@ void renderScene() {
     glutSwapBuffers();
 }
 
-// --- System Callbacks ---
+// --- Game Loop Function ---
 void gameLoop(int value) {
     if (gameStarted && !gameOver && !isPaused && !inCountdown) {
         if (keyUp && carY < 0.7f) carY += carSpeed;
@@ -258,15 +248,16 @@ void gameLoop(int value) {
     glutTimerFunc(16, gameLoop, 0);
 }
 
+// --- Keyboard Input Functions ---
 void normalKeys(unsigned char key, int x, int y) {
-    if (key == 13 && !gameStarted) { // Enter
+    if (key == 13 && !gameStarted) {
         gameStarted = true;
         inCountdown = true;
         countdownValue = 3;
         glutTimerFunc(1000, countdownTimer, 0);
     }
-    else if (key == ' ' && gameStarted && !gameOver) { // Space
-        if (isPaused) { // Resume with countdown
+    else if (key == ' ' && gameStarted && !gameOver) {
+        if (isPaused) {
             isPaused = false;
             inCountdown = true;
             countdownValue = 3;
@@ -276,7 +267,7 @@ void normalKeys(unsigned char key, int x, int y) {
             isPaused = true;
         }
     }
-    else if ((key == 'r' || key == 'R') && gameOver) { // Restart
+    else if ((key == 'r' || key == 'R') && gameOver) {
         gameOver = false; isPaused = false; score = 0; roadSpeed = 0.02f;
         obstacles.clear(); carY = 0.0f;
         inCountdown = true; countdownValue = 3;
@@ -285,6 +276,7 @@ void normalKeys(unsigned char key, int x, int y) {
     else if (key == 27) exit(0);
 }
 
+// --- Special Keys Input Functions ---
 void specialKeys(int key, int x, int y) {
     if (key == GLUT_KEY_UP) keyUp = true;
     if (key == GLUT_KEY_DOWN) keyDown = true;
@@ -295,6 +287,7 @@ void specialKeysUp(int key, int x, int y) {
     if (key == GLUT_KEY_DOWN) keyDown = false;
 }
 
+// --- Main Function ---
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
